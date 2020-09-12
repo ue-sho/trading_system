@@ -1,12 +1,13 @@
 package main
 
 import (
-	"fmt"
+	"log"
 
 	"github.com/ue-sho/trading_system/config"
+	"github.com/ue-sho/trading_system/utils"
 )
 
 func main() {
-	fmt.Println(config.Config.ApiKey)
-	fmt.Println(config.Config.ApiSecret)
+	utils.LoggingSettings(config.Config.LogFile)
+	log.Println("test")
 }
