@@ -8,9 +8,10 @@ import (
 )
 
 type ConfigList struct {
-	ApiKey    string
-	ApiSecret string
-	LogFile   string
+	ApiKey      string
+	ApiSecret   string
+	LogFile     string
+	ProductCode string
 }
 
 var Config ConfigList
