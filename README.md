@@ -14,3 +14,4 @@ api_secret = XXXXXX // APIの認証キー
 
 [trading_system]
 log_file = XXXXX // logの出力先ファイル名
+product_code = BTC_JPY
