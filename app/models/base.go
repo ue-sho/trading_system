@@ -16,6 +16,7 @@ const (
 
 var DbConnection *sql.DB
 
+// テーブルの名前を取得する BTC_JPY_1m (1分毎の日本円ビットコインのデータ)のような値
 func GetCandleTableName(productCode string, duration time.Duration) string {
 	return fmt.Sprintf("%s_%s", productCode, duration)
 }
@@ -35,7 +36,7 @@ func init() {
             size FLOAT)`, tableNameSignalEvents)
 	_, err = DbConnection.Exec(cmd)
 	if err != nil {
-		log.Fatalln(" ")
+		log.Fatalf("SQL文が実行できませんでした, %s", err)
 		return
 	}
 
@@ -51,7 +52,7 @@ func init() {
 			volume FLOAT)`, tableName)
 		_, err = DbConnection.Exec(c)
 		if err != nil {
-			log.Fatalln(" ")
+			log.Fatalf("SQL文が実行できませんでした, %s", err)
 			return
 		}
 	}

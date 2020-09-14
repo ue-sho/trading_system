@@ -174,7 +174,8 @@ type SubscribeParams struct {
 	Channel string `json:"channel"`
 }
 
-// 動かない　wss://ws.lightstream.bitflyer.com/json-rpc　にアクセスできない
+// wss://ws.lightstream.bitflyer.com/json-rpc　にアクセスして
+// リアルタイムに指定したシンボル（BTC_JPY）のデータを取ってくる
 func (api *APIClient) GetRealTimeTicker(symbol string, ch chan<- Ticker) {
 	u := url.URL{Scheme: "wss", Host: "ws.lightstream.bitflyer.com", Path: "/json-rpc"}
 	log.Printf("connecting to %s", u.String())

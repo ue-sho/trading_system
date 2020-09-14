@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 
+	"github.com/ue-sho/trading_system/app/controllers"
 	"github.com/ue-sho/trading_system/app/models"
 	"github.com/ue-sho/trading_system/config"
 	"github.com/ue-sho/trading_system/utils"
@@ -49,4 +50,6 @@ func main() {
 
 	// テーブルを出力する
 	fmt.Println(models.DbConnection)
+	/* リアルタイムにBitFlyerからデータを取ってきてデータベースに保存する */
+	controllers.StreamIngestionData()
 }
