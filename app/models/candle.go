@@ -92,3 +92,31 @@ func CreateCandleWithDuration(ticker bitflyer.Ticker, productCode string, durati
 	currentCandle.Save()
 	return false
 }
+
+// limitで指定されたキャンドル情報を取得する
+func GetAllCandle(productCode string, duration time.Duration, limit int) (dfCandle *DataFrameCandle, err error) {
+	tableName := GetCandleTableName(productCode, duration)
+	cmd := fmt.Sprintf(`SELECT * FROM (
+		SELECT time, open, close, high, low, volume FROM %s ORDER BY time DESC LIMIT ?
+		) ORDER BY time ASC;`, tableName) // 一回全部のデータを取得し時間で逆順して最新のものを取ってきてから、もう一度正順にソートする
+	rows, err := DbConnection.Query(cmd, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	dfCandle = &DataFrameCandle{}
+	dfCandle.ProductCode = productCode
+	dfCandle.Duration = duration
+	for rows.Next() {
+		var candle Candle
+		candle.ProductCode = productCode
+		candle.Duration = duration
+		rows.Scan(&candle.Time, &candle.Open, &candle.Close, &candle.High, &candle.Low, &candle.Volume)
+		dfCandle.Candles = append(dfCandle.Candles, candle)
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+	return dfCandle, nil
+}
