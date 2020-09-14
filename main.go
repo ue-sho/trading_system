@@ -3,14 +3,14 @@ package main
 import (
 	"fmt"
 
-	"github.com/ue-sho/trading_system/bitflyer"
+	"github.com/ue-sho/trading_system/app/models"
 	"github.com/ue-sho/trading_system/config"
 	"github.com/ue-sho/trading_system/utils"
 )
 
 func main() {
 	utils.LoggingSettings(config.Config.LogFile)
-	apiClient := bitflyer.New(config.Config.ApiKey, config.Config.ApiSecret)
+	//apiClient := bitflyer.New(config.Config.ApiKey, config.Config.ApiSecret)
 
 	/* リアルタイムで情報を取得 */
 	// tickerChannel := make(chan bitflyer.Ticker)
@@ -25,18 +25,18 @@ func main() {
 	// }
 
 	/* オーダー情報 */
-	order := &bitflyer.Order{
-		ProductCode:     config.Config.ProductCode,
-		ChildOrderType:  "LIMIT", // or MARKET
-		Side:            "BUY",   // or SELL
-		Price:           7000,
-		Size:            0.01,
-		MinuteToExpires: 1,
-		TimeInForce:     "GTC", // キャンセルするまで有効
-	}
-	/* オーダーを出す */
-	res, _ := apiClient.SendOrder(order)
-	fmt.Println(res.ChildOrderAcceptanceID)
+	// order := &bitflyer.Order{
+	// 	ProductCode:     config.Config.ProductCode,
+	// 	ChildOrderType:  "LIMIT", // or MARKET
+	// 	Side:            "BUY",   // or SELL
+	// 	Price:           7000,
+	// 	Size:            0.01,
+	// 	MinuteToExpires: 1,
+	// 	TimeInForce:     "GTC", // キャンセルするまで有効
+	// }
+	// /* オーダーを出す */
+	// res, _ := apiClient.SendOrder(order)
+	// fmt.Println(res.ChildOrderAcceptanceID)
 
 	/* オーダー情報をリストをみる */
 	//i := "JRF20181012-144016-140584"
@@ -46,4 +46,6 @@ func main() {
 	//}
 	//r, _ := apiClient.ListOrder(params)
 	//fmt.Println(r)
+
+	fmt.Println(models.DbConnection)
 }

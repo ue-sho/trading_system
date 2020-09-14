@@ -2,3 +2,4 @@
 .DS_Store
 config.ini
 trading_system.log
+stockdata.sql
