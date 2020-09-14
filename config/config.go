@@ -23,6 +23,7 @@ type ConfigList struct {
 
 var Config ConfigList
 
+// ファイルから読み取ってデータに格納する
 func init() {
 	cfg, err := ini.Load("config.ini")
 	if err != nil {

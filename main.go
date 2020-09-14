@@ -34,7 +34,7 @@ func main() {
 	// 	MinuteToExpires: 1,
 	// 	TimeInForce:     "GTC", // キャンセルするまで有効
 	// }
-	// /* オーダーを出す */
+	/* オーダーを出す */
 	// res, _ := apiClient.SendOrder(order)
 	// fmt.Println(res.ChildOrderAcceptanceID)
 
@@ -47,5 +47,6 @@ func main() {
 	//r, _ := apiClient.ListOrder(params)
 	//fmt.Println(r)
 
+	// テーブルを出力する
 	fmt.Println(models.DbConnection)
 }
