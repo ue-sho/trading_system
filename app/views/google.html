@@ -1,0 +1,34 @@
+<!-- https://developers.google.com/chart/interactive/docs/gallery/candlestickchart を参考 -->
+<html>
+<head>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script> <!-- パッケージのインクルード -->
+    <script type="text/javascript">
+        google.charts.load('current', {'packages':['corechart']}); // パッケージを使用する
+        google.charts.setOnLoadCallback(drawChart);
+
+        // dfcandleの値を出力する
+        function drawChart() {
+            var data = google.visualization.arrayToDataTable([
+                {{ range. }}
+                ['{{.Time}}', {{.Low}}, {{.Open}}, {{.Close}},  {{.High}}],
+                {{ end}}
+            ], true);
+
+            var options = {
+                legend:'none',
+                candlestick: {
+                    fallingColor: { strokeWidth: 0, fill: '#a52714' },
+                    risingColor: { strokeWidth: 0, fill: '#0f9d58' }
+                }
+            };
+
+            var chart = new google.visualization.CandlestickChart(document.getElementById('chart_div'));
+
+            chart.draw(data, options);
+        }
+    </script>
+</head>
+<body>
+<div id="chart_div" style="width: 900px; height: 500px;"></div>　
+</body>
+</html>

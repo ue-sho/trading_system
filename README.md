@@ -6,8 +6,9 @@ Udemyの「現役シリコンバレーエンジニアが教えるGo入門 + 応�
 
 ### config.ini
 
-topディレクトリにconfig.iniを作り以下の項目を設定する
+トップディレクトリにconfig.iniを作り以下の項目を設定する
 
+```
 [bitflyer]
 api_key = XXXX // APIキー
 api_secret = XXXXXX // APIの認証キー
@@ -15,3 +16,12 @@ api_secret = XXXXXX // APIの認証キー
 [trading_system]
 log_file = XXXXX // logの出力先ファイル名
 product_code = BTC_JPY
+trade_duration = 1m
+
+[db]
+name = stockdata.sql
+driver = sqlite3
+
+[web]
+port = 8080
+```

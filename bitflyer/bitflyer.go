@@ -25,6 +25,7 @@ type APIClient struct {
 	httpClient *http.Client
 }
 
+// 新しく作る
 func New(key, secret string) *APIClient {
 	apiClient := &APIClient{key, secret, &http.Client{}}
 	return apiClient
@@ -48,6 +49,10 @@ func (api APIClient) header(method, endpoint string, body []byte) map[string]str
 }
 
 // Httpリクエストを行う
+// method : POST or GET
+// urlPath : baseURL以降のURL
+// query : クエリ
+// data : POSTのときデータを送る
 func (api *APIClient) doRequest(method, urlPath string, query map[string]string, data []byte) (body []byte, err error) {
 	baseURL, err := url.Parse(baseURL)
 	if err != nil {
@@ -57,7 +62,7 @@ func (api *APIClient) doRequest(method, urlPath string, query map[string]string,
 	if err != nil {
 		return
 	}
-	endpoint := baseURL.ResolveReference(apiURL).String()
+	endpoint := baseURL.ResolveReference(apiURL).String() // 繋がるURLに変換する
 	log.Printf("action=doRequest endpoint=%s", endpoint)
 	req, err := http.NewRequest(method, endpoint, bytes.NewBuffer(data)) // POSTの場合は送るデータを第３引数にいれる
 	if err != nil {
@@ -67,16 +72,16 @@ func (api *APIClient) doRequest(method, urlPath string, query map[string]string,
 	for key, value := range query { // クエリを付け加える
 		q.Add(key, value)
 	}
-	req.URL.RawQuery = q.Encode() // map[a:[1] b:[2] c[3&$] を　a=1&b=2&c=3%26%25　というようにする
+	req.URL.RawQuery = q.Encode() // map[a:[1] b:[2] c[3&$]] を　a=1&b=2&c=3%26%25　というようにする
 
 	for key, value := range api.header(method, req.URL.RequestURI(), data) { // ヘッダ情報を付け加える（認証）
 		req.Header.Add(key, value)
 	}
-	resp, err := api.httpClient.Do(req)
+	resp, err := api.httpClient.Do(req) //
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer resp.Body.Close() //
 	body, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
@@ -169,7 +174,8 @@ type SubscribeParams struct {
 	Channel string `json:"channel"`
 }
 
-// 動かない　wss://ws.lightstream.bitflyer.com/json-rpc　にアクセスできない
+// wss://ws.lightstream.bitflyer.com/json-rpc　にアクセスして
+// リアルタイムに指定したシンボル（BTC_JPY）のデータを取ってくる
 func (api *APIClient) GetRealTimeTicker(symbol string, ch chan<- Ticker) {
 	u := url.URL{Scheme: "wss", Host: "ws.lightstream.bitflyer.com", Path: "/json-rpc"}
 	log.Printf("connecting to %s", u.String())
@@ -244,6 +250,7 @@ type ResponseSendChildOrder struct {
 	ChildOrderAcceptanceID string `json:"child_order_acceptance_id"`
 }
 
+// オーダーを出す　ChildOrderTypeでタイプを指定したり、sideでBUYかSELLなどを選ぶ
 func (api *APIClient) SendOrder(order *Order) (*ResponseSendChildOrder, error) {
 	data, err := json.Marshal(order)
 	if err != nil {
@@ -262,6 +269,7 @@ func (api *APIClient) SendOrder(order *Order) (*ResponseSendChildOrder, error) {
 	return &response, nil
 }
 
+// 出したオーダーを取得する
 func (api *APIClient) ListOrder(query map[string]string) ([]Order, error) {
 	resp, err := api.doRequest("GET", "me/getchildorders", query, nil)
 	if err != nil {
