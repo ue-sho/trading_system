@@ -14,19 +14,21 @@ import (
 )
 
 // キャッシュして保存しておく
-var templates = template.Must(template.ParseFiles("app/views/google.html"))
+var templates = template.Must(template.ParseFiles("app/views/chart.html"))
 
 // ハンドラ
 func viewChartHandler(w http.ResponseWriter, r *http.Request) {
-	limit := 100
-	duration := "1m"                                  // ここで間隔を変えていく
-	durationTime := config.Config.Durations[duration] // mapなので time.Minute を取ってくる
-	df, err := models.GetAllCandle(config.Config.ProductCode, durationTime, limit)
-	if err != nil {
-		log.Fatalf("GetAllCandle Error : %s", err)
-	}
+	/* ajaxでデータを取ってくるようにしたのでいらなくなった */
+	// limit := 100
+	// duration := "1m"                                  // ここで間隔を変えていく
+	// durationTime := config.Config.Durations[duration] // mapなので time.Minute を取ってくる
+	// df, err := models.GetAllCandle(config.Config.ProductCode, durationTime, limit)
+	// if err != nil {
+	// 	log.Fatalf("GetAllCandle Error : %s", err)
+	// }
 
-	err = templates.ExecuteTemplate(w, "google.html", df.Candles)
+	// err = templates.ExecuteTemplate(w, "google.html", df.Candles)
+	err := templates.ExecuteTemplate(w, "chart.html", nil)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chart</title>
+    <style>
+        #dashboard_div{
+            width: 600px;
+            border: 1px solid #ccc;
+        }
+        #chart_div{
+            height:400px;
+            border-bottom: 1px solid #ccc;
+        }
+        #filter_div{
+            height:50px;
+        }
+    </style>
+
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>　<!-- jQuery これだけで使えるようになる -->
+    <script type="text/javascript">
+        google.charts.load('current', {'packages':['corechart', 'controls']});
+
+        var config = { // 辞書型みたいなものを定義
+            api:{
+                enable: true, // ajaxでデータが取ってこれるかどうか
+                interval: 1000 * 3
+            },
+            candlestick:{
+                product_code: 'BTC_JPY',
+                duration: '1m',
+                limit: 365, // 365日？
+                numViews: 5, // 基本(low, hight, open, close, volume)
+            },
+        };
+
+        function drawChart(dataTable) { // 描画
+            var chartDiv = document.getElementById('chart_div'); // chart_divタグに書き込む
+            var charts = [];
+            var dashboard = new google.visualization.Dashboard(chartDiv);
+            var mainChart = new google.visualization.ChartWrapper({
+                chartType: 'ComboChart', // 描画タイプ
+                containerId: 'chart_div',
+                options: {
+                    hAxis: {'slantedText': false},
+                    legend: {'position': 'none'},
+                    candlestick: {
+                        fallingColor: { strokeWidth: 0, fill: '#a52714' },
+                        risingColor: { strokeWidth: 0, fill: '#0f9d58' }
+                    },
+                    seriesType: "candlesticks",
+                    series: {}
+                },
+                view: {
+                    columns: [
+                        { // time Dateを文字列に変換
+                            calc: function(d, rowIndex) {
+                                return d.getFormattedValue(rowIndex, 0);
+                            },
+                            type: 'string'
+
+                        }, 1, 2, 3, 4 // volumeは使わない
+                    ]
+
+                }
+
+            });
+            charts.push(mainChart);
+
+            var options = mainChart.getOptions();
+            var view = mainChart.getView();
+
+            var controlWrapper = new google.visualization.ControlWrapper({
+                'controlType': 'ChartRangeFilter',
+                'containerId': 'filter_div',
+                'options': {
+                    'filterColumnIndex': 0,
+                    'ui': {
+                        'chartType': 'LineChart',
+                        'chartView': {
+                            'columns': [0, 4] // 0~4をみる
+                        }
+                    }
+                }
+            });
+
+            dashboard.bind(controlWrapper, charts);
+            dashboard.draw(dataTable);
+
+        }
+
+        function send () {
+            if (config.api.enable == false){ // 操作中ならajaxでデータを取らない
+                return
+            }
+            var params = { // 辞書から読み込む
+                "product_code": config.candlestick.product_code,
+                "limit": config.candlestick.limit,
+                "duration": config.candlestick.duration,
+            }
+            $.get("/api/candle/", params).done(function (data) {
+                var dataTable = new google.visualization.DataTable();
+                dataTable.addColumn('date', 'Date');
+                dataTable.addColumn('number', 'Low');
+                dataTable.addColumn('number', 'Open');
+                dataTable.addColumn('number', 'Close');
+                dataTable.addColumn('number', 'High');
+                dataTable.addColumn('number', 'Volume');
+
+                var googleChartData = [];
+                var candles = data["candles"];
+
+                for(var i=0; i < candles.length; i++){
+                    var candle = candles[i];
+                    var date = new Date(candle.time);
+                    var datas = [date, candle.low, candle.open, candle.close, candle.high, candle.volume];
+
+                    googleChartData.push(datas) // listに追加
+                }
+
+                dataTable.addRows(googleChartData);
+                drawChart(dataTable);
+            })
+        }
+
+        function changeDuration(s){
+            config.candlestick.duration = s;
+            send();
+        }
+
+        setInterval(send, 1000 * 3)
+        window.onload = function () {
+            send()
+
+            $('#dashboard_div').mouseenter(function() { // dashboard_divにマウスがある
+                config.api.enable = false;
+            }).mouseleave(function() {
+                config.api.enable = true;
+            });
+        }
+    </script>
+</head>
+<body>
+
+<div>
+    <button onclick="changeDuration('1s');">1s</button>
+    <button onclick="changeDuration('1m');">1m</button>
+    <button onclick="changeDuration('1h');">1h</button>
+</div>
+
+<div id="dashboard_div">
+    <div id="chart_div"></div>
+    <div id="filter_div"></div>
+</div>
+
+</body>
+</html>
