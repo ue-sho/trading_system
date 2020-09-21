@@ -1,11 +1,22 @@
 package models
 
-import "time"
+import (
+	"time"
+
+	"github.com/markcheno/go-talib"
+)
 
 type DataFrameCandle struct {
 	ProductCode string        `json:"product_code"`
 	Duration    time.Duration `json:"duration"`
 	Candles     []Candle      `json:"candles"` // Candleで柔軟性が上がる
+	Smas        []Sma         `json:"smas,omitempty"`
+}
+
+// Sma - Simple Moving Average
+type Sma struct {
+	Period int       `json:"period,omitempty"`
+	Values []float64 `json:"values,omitempty"`
 }
 
 // Timeだけが入ったスライスを取得する
@@ -60,4 +71,15 @@ func (df *DataFrameCandle) Volume() []float64 {
 		s[i] = candle.Volume
 	}
 	return s
+}
+
+func (df *DataFrameCandle) AddSma(period int) bool {
+	if len(df.Candles) > period {
+		df.Smas = append(df.Smas, Sma{
+			Period: period,
+			Values: talib.Sma(df.Closes(), period),
+		})
+		return true
+	}
+	return false
 }
