@@ -105,6 +105,28 @@ func apiCandleHandler(w http.ResponseWriter, r *http.Request) {
 		df.AddSma(period3)
 	}
 
+	ema := r.URL.Query().Get("ema")
+	if ema != "" {
+		strEmaPeriod1 := r.URL.Query().Get("emaPeriod1")
+		strEmaPeriod2 := r.URL.Query().Get("emaPeriod2")
+		strEmaPeriod3 := r.URL.Query().Get("emaPeriod3")
+		period1, err := strconv.Atoi(strEmaPeriod1)
+		if strEmaPeriod1 == "" || err != nil || period1 < 0 {
+			period1 = 7
+		}
+		period2, err := strconv.Atoi(strEmaPeriod2)
+		if strEmaPeriod2 == "" || err != nil || period2 < 0 {
+			period2 = 14
+		}
+		period3, err := strconv.Atoi(strEmaPeriod3)
+		if strEmaPeriod3 == "" || err != nil || period3 < 0 {
+			period3 = 50
+		}
+		df.AddEma(period1)
+		df.AddEma(period2)
+		df.AddEma(period3)
+	}
+
 	js, err := json.Marshal(df)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
