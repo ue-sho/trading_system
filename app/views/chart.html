@@ -15,6 +15,13 @@
         #filter_div{
             height:50px;
         }
+        .technical_title{
+            margin: 10px;
+            color: gray;
+        }
+        .bottom_chart{
+            border-bottom: 1px solid #ccc;
+        }
     </style>
 
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
@@ -30,7 +37,7 @@
             candlestick:{
                 product_code: 'BTC_JPY',
                 duration: '1m',
-                limit: 365, // 365日？
+                limit: 365, // 365日
                 numViews: 5, // 基本(low, hight, open, close, volume)
             },
             dataTable: {
@@ -67,27 +74,40 @@
                 senkouB: [],
                 chikou: []
             },
+            volume: {
+                enable: false,
+                index: [],
+                values: []
+            },
         };
 
+        // 初期化
         function initConfigValues() {
             config.dataTable.index = 0;
+
             config.sma.indexes = [];
             config.sma.values = [];
+
             config.ema.indexes = [];
             config.ema.values = [];
+
             config.bbands.indexes = [];
             config.bbands.up = [];
             config.bbands.mid = [];
             config.bbands.down = [];
+
             config.ichimoku.indexes = [];
             config.ichimoku.tenkan = [];
             config.ichimoku.kijun = [];
             config.ichimoku.senkouA = [];
             config.ichimoku.senkouB = [];
             config.ichimoku.chikou = [];
+
+            config.volume.index = [];
         }
 
-        function drawChart(dataTable) { // 描画
+        // チャートを描画する
+        function drawChart(dataTable) {
             var chartDiv = document.getElementById('chart_div'); // chart_divタグに書き込む
             var charts = [];
             var dashboard = new google.visualization.Dashboard(chartDiv);
@@ -158,6 +178,30 @@
                 }
             }
 
+            if (config.volume.enable == true) {
+                if ($('#volume_div').length == 0) {
+                    $('#technical_div').append(
+                        "<div id='volume_div' class='bottom_chart'>" +
+                        "<span class='technical_title'>Volume</span>" +
+                        "<div id='volume_chart'></div>" +
+                        "</div>")
+                }
+                var volumeChart = new google.visualization.ChartWrapper({
+                    'chartType': 'ColumnChart',
+                    'containerId': 'volume_chart',
+                    'options': {
+                        'hAxis': { 'slantedText': false },
+                        'legend': { 'position': 'none' },
+                        'series': {}
+                    },
+                    'view': {
+                        'columns': [{ 'type': 'string' }, 5]
+                    }
+                });
+                charts.push(volumeChart)
+            }
+
+
             var controlWrapper = new google.visualization.ControlWrapper({
                 'controlType': 'ChartRangeFilter',
                 'containerId': 'filter_div',
@@ -174,9 +218,9 @@
 
             dashboard.bind(controlWrapper, charts);
             dashboard.draw(dataTable);
-
         }
 
+        // データをDBに送る
         function send () {
             if (config.api.enable == false){ // 操作中ならajaxでデータを取らない
                 return
@@ -463,6 +507,15 @@
                 send();
             });
 
+            $('#inputVolume').change(function () {
+                if (this.checked === true) {
+                    config.volume.enable = true;
+                    drawChart(config.dataTable.value);
+                } else {
+                    config.volume.enable = false;
+                    $('#volume_div').remove();
+                }
+            });
         }
     </script>
 </head>
@@ -500,8 +553,13 @@
     Ichimoku <input id="inputIchimoku" type="checkbox">
 </div>
 
+<div>
+    Volume <input id="inputVolume" type="checkbox">
+</div>
+
 <div id="dashboard_div">
     <div id="chart_div"></div>
+    <div id="technical_div"></div>
     <div id="filter_div"></div>
 </div>
 
