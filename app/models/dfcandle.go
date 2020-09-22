@@ -9,9 +9,10 @@ import (
 type DataFrameCandle struct {
 	ProductCode string        `json:"product_code"`
 	Duration    time.Duration `json:"duration"`
-	Candles     []Candle      `json:"candles"` // Candleで柔軟性が上がる
-	Smas        []Sma         `json:"smas,omitempty"`
+	Candles     []Candle      `json:"candles"`        // Candleで柔軟性が上がる
+	Smas        []Sma         `json:"smas,omitempty"` // 複数ある可能性がある
 	Emas        []Ema         `json:"emas,omitempty"`
+	BBands      *BBands       `json:"bbands,omitempty"` // ポインタでないと omitempty が空と判断してくれない
 }
 
 // Sma - Simple Moving Average
@@ -24,6 +25,15 @@ type Sma struct {
 type Ema struct {
 	Period int       `json:"period,omitempty"`
 	Values []float64 `json:"values,omitempty"`
+}
+
+// ボリンジャーバンド 価格帯の標準偏差みたいなもの
+type BBands struct {
+	N    int       `json:"n,omitempty"`
+	K    float64   `json:"k,omitempty"`
+	Up   []float64 `json:"up,omitempty"`
+	Mid  []float64 `json:"mid,omitempty"`
+	Down []float64 `json:"down,omitempty"`
 }
 
 // Timeだけが入ったスライスを取得する
@@ -97,6 +107,21 @@ func (df *DataFrameCandle) AddEma(period int) bool {
 			Period: period,
 			Values: talib.Ema(df.Closes(), period),
 		})
+		return true
+	}
+	return false
+}
+
+func (df *DataFrameCandle) AddBBands(n int, k float64) bool {
+	if n <= len(df.Closes()) {
+		up, mid, down := talib.BBands(df.Closes(), n, k, k, 0)
+		df.BBands = &BBands{
+			N:    n,
+			K:    k,
+			Up:   up,
+			Mid:  mid,
+			Down: down,
+		}
 		return true
 	}
 	return false
