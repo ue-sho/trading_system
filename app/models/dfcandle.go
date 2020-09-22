@@ -4,15 +4,17 @@ import (
 	"time"
 
 	"github.com/markcheno/go-talib"
+	"github.com/ue-sho/trading_system/tradingalgo"
 )
 
 type DataFrameCandle struct {
-	ProductCode string        `json:"product_code"`
-	Duration    time.Duration `json:"duration"`
-	Candles     []Candle      `json:"candles"`        // Candleで柔軟性が上がる
-	Smas        []Sma         `json:"smas,omitempty"` // 複数ある可能性がある
-	Emas        []Ema         `json:"emas,omitempty"`
-	BBands      *BBands       `json:"bbands,omitempty"` // ポインタでないと omitempty が空と判断してくれない
+	ProductCode   string         `json:"product_code"`
+	Duration      time.Duration  `json:"duration"`
+	Candles       []Candle       `json:"candles"`        // Candleで柔軟性が上がる
+	Smas          []Sma          `json:"smas,omitempty"` // 複数ある可能性がある
+	Emas          []Ema          `json:"emas,omitempty"`
+	BBands        *BBands        `json:"bbands,omitempty"` // ポインタでないと omitempty が空と判断してくれない
+	IchimokuCloud *IchimokuCloud `json:"ichimoku,omitempty"`
 }
 
 // Sma - Simple Moving Average
@@ -34,6 +36,15 @@ type BBands struct {
 	Up   []float64 `json:"up,omitempty"`
 	Mid  []float64 `json:"mid,omitempty"`
 	Down []float64 `json:"down,omitempty"`
+}
+
+// 一目均衡表
+type IchimokuCloud struct {
+	Tenkan  []float64 `json:"tenkan,omitempty"`
+	Kijun   []float64 `json:"kijun,omitempty"`
+	SenkouA []float64 `json:"senkoua,omitempty"`
+	SenkouB []float64 `json:"senkoub,omitempty"`
+	Chikou  []float64 `json:"chikou,omitempty"`
 }
 
 // Timeだけが入ったスライスを取得する
@@ -121,6 +132,22 @@ func (df *DataFrameCandle) AddBBands(n int, k float64) bool {
 			Up:   up,
 			Mid:  mid,
 			Down: down,
+		}
+		return true
+	}
+	return false
+}
+
+func (df *DataFrameCandle) AddIchimoku() bool {
+	tenkanN := 9
+	if len(df.Closes()) >= tenkanN {
+		tenkan, kijun, senkouA, senkouB, chikou := tradingalgo.IchimokuCloud(df.Closes())
+		df.IchimokuCloud = &IchimokuCloud{
+			Tenkan:  tenkan,
+			Kijun:   kijun,
+			SenkouA: senkouA,
+			SenkouB: senkouB,
+			Chikou:  chikou,
 		}
 		return true
 	}
