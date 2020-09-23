@@ -1,14 +1,17 @@
 package main
 
 import (
-	"github.com/ue-sho/trading_system/app/controllers"
-	"github.com/ue-sho/trading_system/config"
-	"github.com/ue-sho/trading_system/utils"
+	"fmt"
+	"time"
+
+	"github.com/ue-sho/trading_system/app/models"
 )
 
 func main() {
-	utils.LoggingSettings(config.Config.LogFile)
-	//apiClient := bitflyer.New(config.Config.ApiKey, config.Config.ApiSecret)
+
+	/* ログの設定 */
+	// utils.LoggingSettings(config.Config.LogFile)
+	// apiClient := bitflyer.New(config.Config.ApiKey, config.Config.ApiSecret)
 
 	/* リアルタイムで情報を取得 */
 	// tickerChannel := make(chan bitflyer.Ticker)
@@ -32,23 +35,35 @@ func main() {
 	// 	MinuteToExpires: 1,
 	// 	TimeInForce:     "GTC", // キャンセルするまで有効
 	// }
+
 	/* オーダーを出す */
 	// res, _ := apiClient.SendOrder(order)
 	// fmt.Println(res.ChildOrderAcceptanceID)
 
 	/* オーダー情報をリストをみる */
-	//i := "JRF20181012-144016-140584"
-	//params := map[string]string{
+	// i := "JRF20181012-144016-140584"
+	// params := map[string]string{
 	//	"product_code": config.Config.ProductCode,
 	//	"child_order_acceptance_id": i,
-	//}
-	//r, _ := apiClient.ListOrder(params)
-	//fmt.Println(r)
+	// }
+	// r, _ := apiClient.ListOrder(params)
+	// fmt.Println(r)
 
 	// テーブルを出力する
 	// fmt.Println(models.DbConnection)
-	/* リアルタイムにBitFlyerからデータを取ってきてデータベースに保存する */
-	controllers.StreamIngestionData()
 
-	controllers.StartWebServer()
+	/* リアルタイムにBitFlyerからデータを取ってきてデータベースに保存する */
+	// controllers.StreamIngestionData()
+	// controllers.StartWebServer()
+
+	s := models.NewSignalEvents()
+	df, _ := models.GetAllCandle("BTC_JPY", time.Minute, 10)
+	c1 := df.Candles[0]
+	c2 := df.Candles[5]
+	s.Buy("BTC_JPY", c1.Time.UTC(), c1.Close, 1.0, true)
+	s.Sell("BTC_JPY", c2.Time.UTC(), c2.Close, 1.0, true)
+	fmt.Println(models.GetSignalEventsByCount(1))
+	fmt.Println(models.GetSignalEventsAfterTime(c1.Time))
+	fmt.Println(s.CollectAfter(time.Now().UTC()))
+	fmt.Println(s.CollectAfter(c1.Time))
 }
