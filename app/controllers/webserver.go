@@ -199,6 +199,12 @@ func apiCandleHandler(w http.ResponseWriter, r *http.Request) {
 		df.AddHv(period3)
 	}
 
+	events := r.URL.Query().Get("events")
+	if events != "" {
+		firstTime := df.Candles[0].Time // 84行めで指定した個数の頭の時間
+		df.AddEvents(firstTime)
+	}
+
 	js, err := json.Marshal(df)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
