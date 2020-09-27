@@ -19,6 +19,12 @@ type ConfigList struct {
 	DbName        string
 	SQLDriver     string
 	Port          int
+
+	BackTest         bool
+	UsePercent       float64
+	DataLimit        int
+	StopLimitPercent float64
+	NumRanking       int
 }
 
 var Config ConfigList
@@ -38,14 +44,21 @@ func init() {
 	}
 
 	Config = ConfigList{
-		ApiKey:        cfg.Section("bitflyer").Key("api_key").String(),
-		ApiSecret:     cfg.Section("bitflyer").Key("api_secret").String(),
-		LogFile:       cfg.Section("trading_system").Key("log_file").String(),
-		ProductCode:   cfg.Section("trading_system").Key("product_code").String(),
+		ApiKey:      cfg.Section("bitflyer").Key("api_key").String(),
+		ApiSecret:   cfg.Section("bitflyer").Key("api_secret").String(),
+		LogFile:     cfg.Section("trading_system").Key("log_file").String(),
+		ProductCode: cfg.Section("trading_system").Key("product_code").String(),
+
 		Durations:     durations,
 		TradeDuration: durations[cfg.Section("trading_system").Key("trade_duration").String()],
 		DbName:        cfg.Section("db").Key("name").String(),
 		SQLDriver:     cfg.Section("db").Key("driver").String(),
 		Port:          cfg.Section("web").Key("port").MustInt(),
+
+		BackTest:         cfg.Section("trading_system").Key("back_test").MustBool(),
+		UsePercent:       cfg.Section("trading_system").Key("use_percent").MustFloat64(),
+		DataLimit:        cfg.Section("trading_system").Key("data_limit").MustInt(),
+		StopLimitPercent: cfg.Section("trading_system").Key("stop_limit_percent").MustFloat64(),
+		NumRanking:       cfg.Section("trading_system").Key("num_ranking").MustInt(),
 	}
 }

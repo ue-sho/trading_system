@@ -199,6 +199,45 @@ func apiCandleHandler(w http.ResponseWriter, r *http.Request) {
 		df.AddHv(period3)
 	}
 
+	events := r.URL.Query().Get("events")
+	if events != "" {
+		if config.Config.BackTest {
+			/* EMAのバックテスト */
+			// performance, p1, p2 := df.OptimizeEma()
+			// log.Println(performance, p1, p2)
+			// if performance > 0 {
+			// 	df.Events = df.BackTestEma(p1, p2)
+			// }
+
+			/* ボリンジャーバンドのバックテスト */
+			// performance, p1, p2 := df.OptimizeBb()
+			// log.Println(performance, p1, p2)
+			// if performance > 0 {
+			// 	df.Events = df.BackTestBb(p1, p2)
+			// }
+
+			/* 一目均衡表のバックテスト */
+			// df.Events = df.BackTestIchimoku()
+
+			/* MACDのバックテスト */
+			// performance, p1, p2, p3 := df.OptimizeMacd()
+			// log.Println(performance, p1, p2, p3)
+			// if performance > 0 {
+			// 	df.Events = df.BackTestMacd(p1, p2, p3)
+			// }
+
+			/* RSIのバックテスト */
+			// performance, period, buythread, sellthread := df.OptimizeRsi()
+			// log.Println(performance, period, buythread, sellthread)
+			// if performance > 0 {
+			// 	df.Events = df.BackTestRsi(period, buythread, sellthread)
+			// }
+		} else {
+			firstTime := df.Candles[0].Time // 84行めで指定した個数の頭の時間
+			df.AddEvents(firstTime)
+		}
+	}
+
 	js, err := json.Marshal(df)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
