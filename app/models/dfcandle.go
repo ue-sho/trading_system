@@ -322,3 +322,140 @@ func (df *DataFrameCandle) OptimizeBb() (performance float64, bestN int, bestK f
 	}
 	return performance, bestN, bestK
 }
+
+// 一目均衡表のバックテスト  長期などで使いやすい
+func (df *DataFrameCandle) BackTestIchimoku() *SignalEvents {
+	lenCandles := len(df.Candles)
+
+	if lenCandles <= 52 {
+		return nil
+	}
+
+	signalEvents := &SignalEvents{}
+	tenkan, kijun, senkouA, senkouB, chikou := tradingalgo.IchimokuCloud(df.Closes())
+
+	for i := 1; i < lenCandles; i++ {
+
+		// 三役好天
+		if chikou[i-1] < df.Candles[i-1].High && chikou[i] >= df.Candles[i].High &&
+			senkouA[i] < df.Candles[i].Low && senkouB[i] < df.Candles[i].Low &&
+			tenkan[i] > kijun[i] {
+			signalEvents.Buy(df.ProductCode, df.Candles[i].Time, df.Candles[i].Close, 1.0, false)
+		}
+
+		// 三役逆転
+		if chikou[i-1] > df.Candles[i-1].Low && chikou[i] <= df.Candles[i].Low &&
+			senkouA[i] > df.Candles[i].High && senkouB[i] > df.Candles[i].High &&
+			tenkan[i] < kijun[i] {
+			signalEvents.Sell(df.ProductCode, df.Candles[i].Time, df.Candles[i].Close, 1.0, false)
+		}
+	}
+	return signalEvents
+}
+
+func (df *DataFrameCandle) OptimizeIchimoku() (performance float64) {
+	signalEvents := df.BackTestIchimoku()
+	if signalEvents == nil {
+		return 0.0
+	}
+	performance = signalEvents.Profit()
+	return performance
+}
+
+// MACDのバックテスト
+func (df *DataFrameCandle) BackTestMacd(macdFastPeriod, macdSlowPeriod, macdSignalPeriod int) *SignalEvents {
+	lenCandles := len(df.Candles)
+
+	if lenCandles <= macdFastPeriod || lenCandles <= macdSlowPeriod || lenCandles <= macdSignalPeriod {
+		return nil
+	}
+
+	signalEvents := &SignalEvents{}
+	outMACD, outMACDSignal, _ := talib.Macd(df.Closes(), macdFastPeriod, macdSlowPeriod, macdSignalPeriod)
+
+	for i := 1; i < lenCandles; i++ {
+		if outMACD[i] < 0 &&
+			outMACDSignal[i] < 0 &&
+			outMACD[i-1] < outMACDSignal[i-1] &&
+			outMACD[i] >= outMACDSignal[i] {
+			signalEvents.Buy(df.ProductCode, df.Candles[i].Time, df.Candles[i].Close, 1.0, false)
+		}
+
+		if outMACD[i] > 0 &&
+			outMACDSignal[i] > 0 &&
+			outMACD[i-1] > outMACDSignal[i-1] &&
+			outMACD[i] <= outMACDSignal[i] {
+			signalEvents.Sell(df.ProductCode, df.Candles[i].Time, df.Candles[i].Close, 1.0, false)
+		}
+	}
+	return signalEvents
+}
+
+func (df *DataFrameCandle) OptimizeMacd() (performance float64, bestMacdFastPeriod, bestMacdSlowPeriod, bestMacdSignalPeriod int) {
+	bestMacdFastPeriod = 12
+	bestMacdSlowPeriod = 26
+	bestMacdSignalPeriod = 9
+
+	for fastPeriod := 10; fastPeriod < 19; fastPeriod++ {
+		for slowPeriod := 20; slowPeriod < 30; slowPeriod++ {
+			for signalPeriod := 5; signalPeriod < 15; signalPeriod++ {
+				signalEvents := df.BackTestMacd(fastPeriod, slowPeriod, signalPeriod)
+				if signalEvents == nil {
+					continue
+				}
+				profit := signalEvents.Profit()
+				if performance < profit {
+					performance = profit
+					bestMacdFastPeriod = fastPeriod
+					bestMacdSlowPeriod = slowPeriod
+					bestMacdSignalPeriod = signalPeriod
+				}
+			}
+		}
+	}
+	return performance, bestMacdFastPeriod, bestMacdSlowPeriod, bestMacdSignalPeriod
+}
+
+// RSIのバックテスト
+func (df *DataFrameCandle) BackTestRsi(period int, buyThread, sellThread float64) *SignalEvents {
+	lenCandles := len(df.Candles)
+	if lenCandles <= period {
+		return nil
+	}
+
+	signalEvents := NewSignalEvents()
+	values := talib.Rsi(df.Closes(), period)
+	for i := 1; i < lenCandles; i++ {
+		if values[i-1] == 0 || values[i-1] == 100 {
+			continue
+		}
+		if values[i-1] < buyThread && values[i] >= buyThread {
+			signalEvents.Buy(df.ProductCode, df.Candles[i].Time, df.Candles[i].Close, 1.0, false)
+		}
+
+		if values[i-1] > sellThread && values[i] <= sellThread {
+			signalEvents.Sell(df.ProductCode, df.Candles[i].Time, df.Candles[i].Close, 1.0, false)
+		}
+	}
+	return signalEvents
+}
+
+func (df *DataFrameCandle) OptimizeRsi() (performance float64, bestPeriod int, bestBuyThread, bestSellThread float64) {
+	bestPeriod = 14
+	bestBuyThread, bestSellThread = 30.0, 70.0
+
+	for period := 5; period < 25; period++ {
+		signalEvents := df.BackTestRsi(period, bestBuyThread, bestSellThread)
+		if signalEvents == nil {
+			continue
+		}
+		profit := signalEvents.Profit()
+		if performance < profit {
+			performance = profit
+			bestPeriod = period
+			bestBuyThread = bestBuyThread
+			bestSellThread = bestSellThread
+		}
+	}
+	return performance, bestPeriod, bestBuyThread, bestSellThread
+}
