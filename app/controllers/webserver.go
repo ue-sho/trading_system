@@ -202,6 +202,9 @@ func apiCandleHandler(w http.ResponseWriter, r *http.Request) {
 	events := r.URL.Query().Get("events")
 	if events != "" {
 		if config.Config.BackTest {
+
+			df.Events = Ai.SignalEvents.CollectAfter(df.Candles[0].Time)
+
 			/* EMAのバックテスト */
 			// performance, p1, p2 := df.OptimizeEma()
 			// log.Println(performance, p1, p2)

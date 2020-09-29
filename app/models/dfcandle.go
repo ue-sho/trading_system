@@ -263,8 +263,8 @@ func (df *DataFrameCandle) OptimizeEma() (performance float64, bestPeriod1 int, 
 	bestPeriod1 = 7
 	bestPeriod2 = 14
 
-	for period1 := 5; period1 < 11; period1++ {
-		for period2 := 12; period2 < 20; period2++ {
+	for period1 := 5; period1 < 30; period1++ {
+		for period2 := 12; period2 < 50; period2++ {
 			signalEvents := df.BackTestEma(period1, period2)
 			if signalEvents == nil {
 				continue
@@ -508,13 +508,19 @@ func (df *DataFrameCandle) OptimizeParams() *TradeParams {
 	rankings := []*Ranking{emaRanking, bbRanking, macdRanking, ichimokuRanking, rsiRanking}
 	sort.Slice(rankings, func(i, j int) bool { return rankings[i].Performance > rankings[j].Performance })
 
+	isEnable := false
 	for i, ranking := range rankings {
 		if i >= config.Config.NumRanking {
 			break
 		}
 		if ranking.Performance > 0 {
 			ranking.Enable = true
+			isEnable = true
 		}
+	}
+
+	if isEnable {
+		return nil
 	}
 
 	tradeParams := &TradeParams{

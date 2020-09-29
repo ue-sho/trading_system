@@ -148,7 +148,7 @@ func (t *Ticker) TruncateDateTime(duration time.Duration) time.Time {
 }
 
 // product_code の情報を出力する
-func (api *APIClient) GetTiker(productCode string) (*Ticker, error) {
+func (api *APIClient) GetTicker(productCode string) (*Ticker, error) {
 	url := "ticker"
 	resp, err := api.doRequest("GET", url, map[string]string{"product_code": productCode}, nil)
 	if err != nil {

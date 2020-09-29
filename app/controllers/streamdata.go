@@ -10,6 +10,9 @@ import (
 
 // ストリーミングでデータを取ってくる
 func StreamIngestionData() {
+	c := config.Config // 名前が長いので宣言
+	ai := NewAI(c.ProductCode, c.TradeDuration, c.DataLimit, c.UsePercent, c.StopLimitPercent, c.BackTest)
+
 	var tickerChannl = make(chan bitflyer.Ticker)
 	apiClient := bitflyer.New(config.Config.ApiKey, config.Config.ApiSecret)
 	go apiClient.GetRealTimeTicker(config.Config.ProductCode, tickerChannl)
@@ -20,7 +23,7 @@ func StreamIngestionData() {
 			for _, duration := range config.Config.Durations { // 1秒、1分、１時間のものそれぞれデータベースのテーブルに書き込む
 				isCreated := models.CreateCandleWithDuration(ticker, ticker.ProductCode, duration)
 				if isCreated == true && duration == config.Config.TradeDuration {
-					// TODO
+					ai.Trade()
 				}
 			}
 		}
